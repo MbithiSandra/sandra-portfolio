@@ -1,0 +1,675 @@
+/*
+|--------------------------------------------------------------------------
+| glassmorphism.css — Sandra Mbithi Portfolio
+| Drop this file in: public/css/glassmorphism.css
+| Then link it in: resources/views/layouts/app.blade.php
+| <link rel="stylesheet" href="{{ asset('css/glassmorphism.css') }}">
+|--------------------------------------------------------------------------
+|
+| This file adds a "frosted glass" polish pass on top of your existing styles.
+| It does NOT replace your current CSS — it layers on top.
+| All selectors are scoped so they only fire on the dark theme too.
+|
+| CONCEPT EXPLAINED:
+| backdrop-filter: blur() is the magic. It blurs whatever is BEHIND the element.
+| That's why you need a semi-transparent background — if it's fully opaque,
+| there's nothing to blur through. Works in all modern browsers.
+|--------------------------------------------------------------------------
+*/
+
+/* =====================================================================
+   CSS CUSTOM PROPERTIES (variables)
+   Define the glass "recipe" in one place so you can tweak easily.
+   ===================================================================== */
+:root {
+    /* Light mode glass — subtle, barely-there */
+    --glass-bg-light:       rgba(255, 255, 255, 0.55);
+    --glass-border-light:   rgba(255, 255, 255, 0.75);
+    --glass-shadow-light:   0 8px 32px rgba(31, 38, 135, 0.12);
+    --glass-blur:           blur(14px);
+    --glass-radius:         16px;
+
+    /* Dark mode glass — richer, deeper */
+    --glass-bg-dark:        rgba(15, 20, 40, 0.45);
+    --glass-border-dark:    rgba(255, 255, 255, 0.08);
+    --glass-shadow-dark:    0 8px 40px rgba(0, 0, 0, 0.45);
+
+    /* Accent glow — a teal/cyan glow that reads as "tech" for a BIT student */
+    --glow-color:           rgba(56, 189, 248, 0.18);   /* sky-400 at low opacity */
+    --glow-color-strong:    rgba(56, 189, 248, 0.35);
+    --accent-color:         #38bdf8;   /* sky blue */
+    --accent-secondary:     #818cf8;   /* indigo */
+}
+
+/* =====================================================================
+   BACKGROUND — animated gradient mesh behind everything
+   This gives glassmorphism something beautiful to blur THROUGH.
+   ===================================================================== */
+
+/* Light mode animated background */
+body {
+    background-color: #f0f4ff;
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 50%, rgba(167, 139, 250, 0.08) 0%, transparent 70%);
+    background-attachment: fixed;
+    transition: background-color 0.4s ease;
+}
+
+/* Dark mode animated background */
+html.dark,
+.dark body,
+[data-theme="dark"] body,
+body[data-theme="dark"] {
+    background-color: #060b18;
+    background-image:
+        radial-gradient(ellipse at 15% 25%, rgba(56, 189, 248, 0.12) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 75%, rgba(129, 140, 248, 0.10) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 10%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+    background-attachment: fixed;
+}
+
+/* =====================================================================
+   FLOATING ORBS — decorative blurred circles in the background
+   These are the soft glowing blobs you see in glassmorphism designs.
+   They go inside a wrapper div — see the Blade snippet at the bottom.
+   ===================================================================== */
+.glass-orbs {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;  /* clicks pass through */
+    z-index: 0;
+}
+
+.glass-orbs::before,
+.glass-orbs::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: orb-drift 20s ease-in-out infinite alternate;
+}
+
+.glass-orbs::before {
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    left: -150px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.15), transparent 70%);
+}
+
+.glass-orbs::after {
+    width: 500px;
+    height: 500px;
+    bottom: -150px;
+    right: -100px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.12), transparent 70%);
+    animation-delay: -10s;
+}
+
+@keyframes orb-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(40px, -30px) scale(1.05); }
+    66%  { transform: translate(-20px, 20px) scale(0.97); }
+    100% { transform: translate(30px, 10px) scale(1.03); }
+}
+
+/* =====================================================================
+   GLASS UTILITY CLASS
+   Add class="glass-card" to any card/section for instant glass effect.
+   ===================================================================== */
+.glass-card {
+    background: var(--glass-bg-light);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur); /* Safari support */
+    border: 1px solid var(--glass-border-light);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow-light);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shine shimmer on the top edge — gives it that "glass" feel */
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,255,255,0.6) 30%,
+        rgba(255,255,255,0.9) 50%,
+        rgba(255,255,255,0.6) 70%,
+        transparent 100%
+    );
+    border-radius: var(--glass-radius) var(--glass-radius) 0 0;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--glass-shadow-light), 0 0 30px var(--glow-color);
+}
+
+/* Dark mode version */
+html.dark .glass-card,
+[data-theme="dark"] .glass-card {
+    background: var(--glass-bg-dark);
+    border-color: var(--glass-border-dark);
+    box-shadow: var(--glass-shadow-dark);
+}
+
+html.dark .glass-card:hover,
+[data-theme="dark"] .glass-card:hover {
+    box-shadow: var(--glass-shadow-dark), 0 0 40px var(--glow-color);
+}
+
+/* =====================================================================
+   NAVBAR — glass effect
+   Target your nav element. Adjust the selector to match your Blade.
+   ===================================================================== */
+nav,
+header nav,
+.navbar,
+#navbar {
+    background: rgba(240, 244, 255, 0.72) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+    transition: background 0.4s ease, box-shadow 0.3s ease;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+html.dark nav,
+html.dark header nav,
+html.dark .navbar,
+html.dark #navbar,
+[data-theme="dark"] nav {
+    background: rgba(6, 11, 24, 0.65) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Nav scrolled state — darker glass when user scrolls */
+nav.scrolled {
+    background: rgba(240, 244, 255, 0.92) !important;
+    box-shadow: 0 4px 32px rgba(99, 102, 241, 0.15);
+}
+
+html.dark nav.scrolled {
+    background: rgba(6, 11, 24, 0.90) !important;
+}
+
+/* =====================================================================
+   PROJECT CARDS
+   Glassmorphism lift on hover with accent glow
+   ===================================================================== */
+.project-card,
+.card,
+[class*="project"] article,
+[class*="project"] .item {
+    background: rgba(255, 255, 255, 0.60);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.70);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);
+    transition:
+        transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.35s ease,
+        border-color 0.35s ease;
+    overflow: hidden;
+}
+
+.project-card:hover,
+.card:hover {
+    transform: translateY(-6px) scale(1.01);
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow:
+        0 12px 40px rgba(56, 189, 248, 0.15),
+        0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+html.dark .project-card,
+html.dark .card,
+[data-theme="dark"] .project-card {
+    background: rgba(15, 20, 40, 0.50);
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+html.dark .project-card:hover,
+[data-theme="dark"] .project-card:hover {
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow:
+        0 12px 40px rgba(56, 189, 248, 0.12),
+        0 0 0 1px rgba(56, 189, 248, 0.15);
+}
+
+/* =====================================================================
+   SKILLS SECTION — badge chips with glass
+   ===================================================================== */
+.skill-badge,
+.skill-tag,
+[class*="skill"] span,
+[class*="skill"] .tag {
+    background: rgba(56, 189, 248, 0.10);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 999px;  /* pill shape */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    display: inline-block;
+    padding: 4px 14px;
+}
+
+.skill-badge:hover,
+.skill-tag:hover {
+    background: rgba(56, 189, 248, 0.20);
+    border-color: rgba(56, 189, 248, 0.50);
+    transform: translateY(-2px);
+}
+
+/* =====================================================================
+   CONTACT FORM — glass container
+   ===================================================================== */
+form,
+.contact-form,
+#contact form {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(99, 102, 241, 0.10);
+    padding: 2rem;
+}
+
+html.dark form,
+html.dark .contact-form,
+[data-theme="dark"] form {
+    background: rgba(15, 20, 40, 0.55);
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.40);
+}
+
+/* Input fields with glass styling */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+textarea,
+select {
+    background: rgba(255, 255, 255, 0.45) !important;
+    border: 1px solid rgba(99, 102, 241, 0.20) !important;
+    border-radius: 10px !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: rgba(56, 189, 248, 0.60) !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12) !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+}
+
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark textarea,
+[data-theme="dark"] input {
+    background: rgba(15, 20, 40, 0.50) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+    color: #e2e8f0;
+}
+
+html.dark input:focus,
+html.dark textarea:focus {
+    background: rgba(15, 20, 40, 0.70) !important;
+    border-color: rgba(56, 189, 248, 0.45) !important;
+}
+
+/* =====================================================================
+   CHATBOT WIDGET — glass panel
+   ===================================================================== */
+.chatbot,
+.chat-widget,
+#chat-widget,
+.ai-chat {
+    background: rgba(240, 244, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.70);
+    border-radius: 20px;
+    box-shadow:
+        0 20px 60px rgba(56, 189, 248, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+}
+
+html.dark .chatbot,
+html.dark .chat-widget,
+[data-theme="dark"] .ai-chat {
+    background: rgba(10, 15, 35, 0.75);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.50),
+        0 0 0 1px rgba(56, 189, 248, 0.06) inset;
+}
+
+/* Chat bubble — user */
+.chat-bubble-user,
+.message.user,
+[class*="user-message"] {
+    background: linear-gradient(135deg, #38bdf8, #818cf8);
+    border-radius: 18px 18px 4px 18px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.30);
+}
+
+/* Chat bubble — AI/bot */
+.chat-bubble-bot,
+.message.bot,
+[class*="bot-message"],
+[class*="ai-message"] {
+    background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.60);
+    border-radius: 18px 18px 18px 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+html.dark .chat-bubble-bot {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.10);
+}
+
+/* =====================================================================
+   HERO SECTION — glass text container
+   ===================================================================== */
+.hero-content,
+#hero .content,
+.hero-text {
+    background: rgba(255, 255, 255, 0.20);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+}
+
+html.dark .hero-content,
+[data-theme="dark"] .hero-content {
+    background: rgba(15, 20, 40, 0.30);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* =====================================================================
+   ABOUT SECTION — glass bio card
+   ===================================================================== */
+.about-card,
+#about .card,
+.bio-card {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.10);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px rgba(99, 102, 241, 0.15);
+}
+
+html.dark .about-card,
+[data-theme="dark"] .about-card {
+    background: rgba(15, 20, 40, 0.50);
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* =====================================================================
+   BUTTONS — glass primary button
+   ===================================================================== */
+.btn-glass,
+.btn-primary {
+    background: linear-gradient(135deg,
+        rgba(56, 189, 248, 0.80),
+        rgba(129, 140, 248, 0.80)
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow:
+        0 4px 15px rgba(56, 189, 248, 0.30),
+        0 1px 0 rgba(255,255,255,0.25) inset;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+    padding: 0.6rem 1.4rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-glass:hover,
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 25px rgba(56, 189, 248, 0.45),
+        0 1px 0 rgba(255,255,255,0.30) inset;
+}
+
+.btn-glass:active,
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* CV download button — special gold accent */
+.btn-cv,
+a[href*="cv"],
+a[href*="CV"],
+a[download] {
+    background: linear-gradient(135deg,
+        rgba(251, 191, 36, 0.80),
+        rgba(245, 158, 11, 0.80)
+    );
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.25);
+}
+
+.btn-cv:hover,
+a[href*="cv"]:hover {
+    box-shadow: 0 8px 25px rgba(251, 191, 36, 0.40);
+}
+
+/* =====================================================================
+   DARK MODE TOGGLE BUTTON — glass pill
+   ===================================================================== */
+.dark-toggle,
+#dark-toggle,
+[id*="theme"],
+[class*="theme-toggle"] {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.40);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.dark-toggle:hover {
+    background: rgba(255, 255, 255, 0.40);
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.20);
+}
+
+html.dark .dark-toggle {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* =====================================================================
+   SECTION DIVIDERS — subtle glass separator
+   ===================================================================== */
+.section-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(56, 189, 248, 0.40) 30%,
+        rgba(129, 140, 248, 0.40) 70%,
+        transparent
+    );
+    border: none;
+    margin: 3rem auto;
+    max-width: 60%;
+}
+
+/* =====================================================================
+   SCROLL-TRIGGERED ENTRANCE ANIMATIONS
+   Add class="fade-in-up" to sections — they'll animate in on scroll
+   via the IntersectionObserver in glassmorphism.js
+   ===================================================================== */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fade-in-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered children — each child animates slightly later */
+.fade-in-up:nth-child(1) { transition-delay: 0ms; }
+.fade-in-up:nth-child(2) { transition-delay: 80ms; }
+.fade-in-up:nth-child(3) { transition-delay: 160ms; }
+.fade-in-up:nth-child(4) { transition-delay: 240ms; }
+.fade-in-up:nth-child(5) { transition-delay: 320ms; }
+.fade-in-up:nth-child(6) { transition-delay: 400ms; }
+
+/* =====================================================================
+   CUSTOM SCROLLBAR — glass themed
+   ===================================================================== */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #38bdf8, #818cf8);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0ea5e9, #6366f1);
+}
+
+/* =====================================================================
+   SELECTION COLOR — brand accent
+   ===================================================================== */
+::selection {
+    background: rgba(56, 189, 248, 0.25);
+    color: inherit;
+}
+
+/* =====================================================================
+   FOCUS-VISIBLE — accessibility ring with glass style
+   ===================================================================== */
+*:focus-visible {
+    outline: 2px solid rgba(56, 189, 248, 0.70);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+/* =====================================================================
+   LOADING PULSE — for the AI chatbot "thinking" state
+   ===================================================================== */
+.thinking-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    animation: thinking-pulse 1.2s ease-in-out infinite;
+    margin: 0 2px;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinking-pulse {
+    0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
+    40%            { transform: scale(1.0); opacity: 1.0; }
+}
+
+/* =====================================================================
+   STRATHMORE BADGE — a little easter egg for your uni pride 🦁
+   Add <span class="strathmore-badge">Strathmore BIT</span> anywhere
+   ===================================================================== */
+.strathmore-badge {
+    background: linear-gradient(135deg, rgba(180, 0, 0, 0.15), rgba(180, 0, 0, 0.08));
+    border: 1px solid rgba(180, 0, 0, 0.30);
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #b40000;
+    backdrop-filter: blur(8px);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+html.dark .strathmore-badge {
+    color: #ff8080;
+    border-color: rgba(255, 128, 128, 0.25);
+    background: rgba(180, 0, 0, 0.12);
+}
+
+/* =====================================================================
+   RESPONSIVE — keep glass on mobile too
+   ===================================================================== */
+@media (max-width: 768px) {
+    :root {
+        --glass-radius: 12px;
+    }
+
+    .glass-card,
+    .project-card,
+    .about-card {
+        backdrop-filter: blur(10px); /* slightly less blur on mobile for perf */
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .glass-orbs::before { width: 300px; height: 300px; }
+    .glass-orbs::after  { width: 250px; height: 250px; }
+}
+
+/* Reduce motion for users who prefer it — accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .glass-orbs::before,
+    .glass-orbs::after {
+        animation: none;
+    }
+    .fade-in-up {
+        transition: opacity 0.3s ease;
+        transform: none;
+    }
+}
