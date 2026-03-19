@@ -28,6 +28,9 @@ RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
 
 RUN a2enmod rewrite
 
+# Fix: disable the extra MPM module that conflicts with Apache's default
+RUN a2dismod mpm_event && a2enmod mpm_prefork
+
 EXPOSE 80
 
 CMD ["apache2-foreground"]
