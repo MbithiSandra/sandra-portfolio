@@ -1,38 +1,37 @@
-# Use the official PHP 8.4 image with Apache
 FROM php:8.4-apache
 
-# Install system dependencies and PHP extensions Laravel needs
+# Install Node.js 22 (required by Vite) and system dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
+    git curl libpng-dev libonig-dev libxml2-dev \
+    libzip-dev zip unzip ca-certificates gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy all project files into the container
+# Copy project files
 COPY . .
 
-# Install PHP dependencies (no dev packages in production)
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Set correct file permissions so Laravel can write to storage and cache
+# Install Node dependencies and build frontend assets
+RUN npm ci && npm run build
+
+# Clean up node_modules after build — not needed at runtime, saves image size
+RUN rm -rf node_modules
+
+# Set correct permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
-# Configure Apache to serve from Laravel's public folder
+# Point Apache at Laravel's public folder
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
@@ -41,11 +40,9 @@ RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
     /etc/apache2/conf-available/docker-php.conf \
     /etc/apache2/apache2.conf
 
-# Enable Apache mod_rewrite — Laravel needs this for clean URLs
+# Enable mod_rewrite for Laravel's clean URLs
 RUN a2enmod rewrite
 
-# Expose port 80
 EXPOSE 80
 
-# Start Apache when container launches
 CMD ["apache2-foreground"]
