@@ -1,6 +1,9 @@
 {
   "version": 2,
   "framework": null,
+  "buildCommand": "npm install && npm run build && composer install --no-dev --optimize-autoloader",
+  "installCommand": "composer install --no-dev --optimize-autoloader",
+  "outputDirectory": "public",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2"
